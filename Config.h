@@ -14,40 +14,11 @@
 
 // =================================================================================================================================
 // CONTROLLER ======================================================================================================================
-#define HOST_NAME                "mfoozoo" // nStep", Hostname for this device up to 16 chars.                                 Adjust
+#define HOST_NAME                   "OnStepX" //     Hostname for this device up to 16 chars.                                  Adjust
 
-#define AP_SSID                       HOST_NAME                   // Wifi Access Point SSID
-#define AP_PASSWORD                   "password"                  // Wifi Access Point password
-#define AP_CHANNEL                    7                           // Wifi Access Point channel
-#define AP_IP_ADDR                    {192,168,0,1}               // Wifi Access Point IP Address
-#define AP_GW_ADDR                    {192,168,0,1}               // Wifi Access Point GATEWAY Address
-#define AP_SN_MASK                    {255,255,255,0}             // Wifi Access Point SUBNET Mask
-
-#define STA_AP_FALLBACK               true                        // activate SoftAP if station fails to connect
-#define STA_AUTO_RECONNECT            true                        // automatically reconnect if connection is dropped
-#define STA_CONNECT_BOOT_DELAY_MS     10000UL                     // wait after boot before the first station connect attempt
-#define STA_CONNECT_RETRY_INTERVAL_MS 10000UL                     // wait between station connect retries
-#define STA_CONNECT_RETRY_COUNT       2                           // retry station connect this many times before AP fallback
-#define STA_CONNECT_TIMEOUT_MS        30000UL                     // wait for station association/DHCP per attempt
-#define STA_CONNECT_SETTLE_MS         1500UL                      // settle WiFi after scan/disconnect before station connect
-#define STA_CONNECT_DIAGNOSTICS       true                        // log station scan and disconnect reason while troubleshooting
-#define WIFI_COUNTRY_CODE             "KR"                        // two-letter WiFi country code, "" disables explicit country setup
-#define STA_SSID                      "MfFinderAP"                // Station SSID to connnect to
-#define STA_PASSWORD                  "password"                  // Wifi Station mode password
-#define STA_DHCP_ENABLED              true                       // Wifi Station/Ethernet DHCP enabled
-#define STA_IP_ADDR                   {192,168,0,2}               // Wifi Station/Ethernet IP Address
-#define STA_GW_ADDR                   {192,168,0,1}               // Wifi Station/Ethernet GATEWAY Address
-#define STA_SN_MASK                   {255,255,255,0}             // Wifi Station/Ethernet SUBNET Mask.
-#define WIFI_HIGH_PERFORMANCE         ON                          // ON disables WiFi sleep for lower latency
-
-// station 1
-// #define STA1_HOST_NAME                "Office"
-// #define STA1_SSID                     "ssid"
-// #define STA1_PASSWORD                 "12345678"
-// #define STA1_DHCP_ENABLED             true
-// #define STA1_IP_ADDR                  STA_IP_ADDR
-// #define STA1_GW_ADDR                  STA_GW_ADDR
-// #define STA1_SN_MASK                  STA_SN_MASK
+// NOTE: MiniPCB v2 (Teensy4.0) has no built-in radio. WiFi is provided by a WEMOS D1 Mini (ESP8266) companion board wired to
+// SERIAL_B (see SERIAL_B_ESP_FLASHING below) running its own separate OnStep WiFi firmware. The AP_*/STA_*/WIFI_* settings
+// below only apply to boards with a built-in ESP32 radio (e.g. the FYSETC E4) and are intentionally left out here.
 
 #define THERMISTOR1_TNOM               25 //         Nominal temperature (Celsius)
 #define THERMISTOR1_RNOM            10000 //         Nominal resistance (Ohms) at nominal temperature
@@ -57,14 +28,9 @@
                                        
                                           //         Option to extend the temperature measurement range down to -20C or so
 
-#define LIMIT_SENSE_PIN                OFF //         Override default and move limit sense to the FYSETC E4's TB connector
-#define SERIAL_TMC_RX                  35 //         Override default TMC2209 RX pin move to Z-MIN (enable _DRIVER_STATUS to use)
-#define PEC_SENSE_PIN                  OFF    // 34 //         Override default and move limit sense to the FYSETC E4's X-MIN connector
-#define SERIAL_TMC_RX_DISABLE       false //         RX wired to GPIO35 (Z-MIN), UART read-back enabled
-#define MOTOR_DRIVER_DETECT               //         Verify TMC2209 UART comms at boot (logs error if a driver doesn't respond)
-
-#define DISPLAY_WEATHER                ON //         Website, display weather
-#define DISPLAY_INTERNAL_TEMPERATURE   ON //         Website, display internal MCU temperature
+// NOTE: the FYSETC E4 pin overrides (LIMIT_SENSE_PIN/SERIAL_TMC_RX/PEC_SENSE_PIN/MOTOR_DRIVER_DETECT) are removed here so the
+// MiniPCB2 pinmap defaults (src/pinmaps/Pins.MiniPCB.h) apply unmodified, and because MOTOR_DRIVER_DETECT/SERIAL_TMC_RX are
+// TMC2209 UART-only features that don't apply to the TMC5160 SPI drivers used on this build.
 
 #define TIME_LOCATION_SOURCE          OFF
 #define SERIAL_GPS                    OFF    // Serial2
@@ -73,17 +39,19 @@
 #define SERIAL_GPS_BAUD               OFF    // 115200
  
 // PINMAP ------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#PINMAP
-#define PINMAP                        MF_OOZOO_E4 //    OFF, Choose from: MiniPCB, MiniPCB2, MaxPCB4, MaxESP4, MaxSTM3, FYSETC_E4,   <-Req'd
+#define PINMAP                            MiniPCB2 //    OFF, Choose from: MiniPCB, MiniPCB2, MaxPCB4, MaxESP4, MaxSTM3, FYSETC_E4,   <-Req'd
                                           //         BTT_SKR_PRO, etc.  Other boards and more info. in ~/src/Constants.h
 
 // SERIAL PORT COMMAND CHANNELS --------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#SERIAL_PORTS
 #define SERIAL_A_BAUD_DEFAULT      115200 //   9600, n. Where n=9600,19200,57600,115200,230400,460800 (common baud rates.)    Infreq
-#define SERIAL_B_BAUD_DEFAULT         OFF //   9600, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
-#define SERIAL_B_ESP_FLASHING         OFF //    OFF, ON Upload ESP8266 WiFi firmware through SERIAL_B with :ESPFLASH# cmd.    Option
+#define SERIAL_B_BAUD_DEFAULT        9600 //   9600, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
+                                          //         Serial1 (RX1/TX1) to the WEMOS D1 Mini (ESP8266) WiFi companion board.
+#define SERIAL_B_ESP_FLASHING          ON //    OFF, ON Upload ESP8266 WiFi firmware through SERIAL_B with :ESPFLASH# cmd.    Option
 #define SERIAL_C_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
 #define SERIAL_D_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
 #define SERIAL_E_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
-#define SERIAL_RADIO    WIFI_STATION //    OFF, Use BLUETOOTH or WIFI_ACCESS_POINT or WIFI_STATION (ESP32 only.)         Option
+#define SERIAL_RADIO                  OFF //    OFF, Use BLUETOOTH or WIFI_ACCESS_POINT or WIFI_STATION (ESP32 only.)         Option
+                                          //         Teensy4.0 has no built-in radio; WiFi goes through the D1 Mini on SERIAL_B.
 
 // STATUS --------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#STATUS_LED
 #define STATUS_LED                    ON  //    OFF, Steady illumination if no error, blinks w/error code otherwise.          Option
@@ -95,12 +63,13 @@
 #define RETICLE_LED_INVERT            OFF //    OFF, ON Inverts control for cases where 0V is max brightness.                 Option
 
 // WEATHER SENSOR --------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#WEATHER_SENSOR
-#define WEATHER                 BME280_0x76 //    OFF, BME280 (I2C 0x77,) BME280_0x76, BME280_SPI (see pinmap for CS.)          Option
+#define WEATHER                        OFF //    OFF, BME280 (I2C 0x77,) BME280_0x76, BME280_SPI (see pinmap for CS.)          Option
                                           //         BMP280 (I2C 0x77,) BMP280_0x76, BMP280_SPI (see pinmap for CS.)
                                           //         BME280 or BMP280 for temperature, pressure.  BME280 for humidity also.
 
 // SIGNALING ------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#SIGNALING
-#define STEP_WAVE_FORM              PULSE // SQUARE, PULSE Step signal wave form faster rates. SQUARE best signal integrity.  Adjust
+#define STEP_WAVE_FORM             SQUARE // SQUARE, PULSE Step signal wave form faster rates. SQUARE best signal integrity.  Adjust
+                                          //         SQUARE is required on Teensy4.0/4.1 (see src/Validate.h)
                                           //         Applies to all axes.
 
 // NON-VOLATILE MEMORY ---------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#NV
@@ -113,26 +82,32 @@
 // Typically: A4988, DRV8825, LV8729, S109, TMC2130, TMC5160, TMC2209, etc.
 
 // AXIS1 RA/AZM -------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Axes
-#define AXIS1_DRIVER_MODEL        TMC2209 //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
+#define AXIS1_DRIVER_MODEL        TMC5160 //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
-// \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ 
-#define AXIS1_STEPS_PER_DEGREE      32000 //  12800, n. Number of steps per degree:                                          <-Req'd
+// \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
+// 1.8deg motor (200 full steps/rev) * 16 microsteps * 90:1 gear reduction / 360 = 800
+#define AXIS1_STEPS_PER_DEGREE        800 //  12800, n. Number of steps per degree:                                          <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
 #define AXIS1_REVERSE                 ON  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS1_LIMIT_MIN              -180 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_MAX               180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 
-#define AXIS1_DRIVER_MICROSTEPS        256 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
-#define AXIS1_DRIVER_MICROSTEPS_GOTO    16 //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
+// microstep setting matches the AXIS1_STEPS_PER_DEGREE calc above (16 microsteps); GOTO uses the same to keep it consistent
+#define AXIS1_DRIVER_MICROSTEPS         16 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+#define AXIS1_DRIVER_MICROSTEPS_GOTO   OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
+// motor rated current 1.8A: IRUN/IGOTO set to rated, IHOLD OFF uses IRUN/2 (900mA) at standstill to limit heating
 #define AXIS1_DRIVER_IHOLD          OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS1_DRIVER_IRUN           1000 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS1_DRIVER_IGOTO          1500 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS1_DRIVER_IRUN          1800 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
+#define AXIS1_DRIVER_IGOTO         1800 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
-#define AXIS1_DRIVER_STATUS            ON //    OFF, ON, HIGH, or LOW.  For driver status info/fault detection.               Option
+// AXIS1/2_DRIVER_STATUS use the M3 (MISO) pin, which on MiniPCB2 is shared with AUX1/AUX2 (see src/pinmaps/Pins.MiniPCB.h).
+// Those same AUX1/AUX2 pins are also the ESP8266 GPIO0/RST flash-control lines used by SERIAL_B_ESP_FLASHING above, so both
+// features can't be active at once (Validate.h will #error) — DRIVER_STATUS is disabled here to keep the D1 Mini WiFi flashing.
+#define AXIS1_DRIVER_STATUS            OFF //    OFF, ON, HIGH, or LOW.  For driver status info/fault detection.               Option
 
 #define AXIS1_DRIVER_DECAY            OFF //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
 #define AXIS1_DRIVER_DECAY_GOTO       OFF //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
@@ -148,26 +123,32 @@
                                           //         |HYST(n) Where n=0..1023 (ADU) for +/- Hystersis range.
 
 // AXIS2 DEC/ALT ------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Axes
-#define AXIS2_DRIVER_MODEL        TMC2209 //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
+#define AXIS2_DRIVER_MODEL        TMC5160 //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
-#define AXIS2_STEPS_PER_DEGREE      38400 //  12800, n. Number of steps per degree:                                          <-Req'd
+// 1.8deg motor (200 full steps/rev) * 16 microsteps * 90:1 gear reduction / 360 = 800
+#define AXIS2_STEPS_PER_DEGREE        800 //  12800, n. Number of steps per degree:                                          <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
 #define AXIS2_REVERSE                 OFF //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS2_LIMIT_MIN               -10 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_MAX                85 //     90, n. Where n=0..90 (degrees.) Maximum allowed Declination or Altitude.     Infreq
 
-#define AXIS2_DRIVER_MICROSTEPS        64 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
-#define AXIS2_DRIVER_MICROSTEPS_GOTO    4 //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
+// microstep setting matches the AXIS2_STEPS_PER_DEGREE calc above (16 microsteps); GOTO uses the same to keep it consistent
+#define AXIS2_DRIVER_MICROSTEPS         16 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+#define AXIS2_DRIVER_MICROSTEPS_GOTO   OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
+// motor rated current 1.8A: IRUN/IGOTO set to rated, IHOLD OFF uses IRUN/2 (900mA) at standstill to limit heating
 #define AXIS2_DRIVER_IHOLD           OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS2_DRIVER_IRUN            1000 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS2_DRIVER_IGOTO           2000 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS2_DRIVER_IRUN           1800 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
+#define AXIS2_DRIVER_IGOTO          1800 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
-#define AXIS2_DRIVER_STATUS            ON //    OFF, ON, HIGH, or LOW.  Polling for driver status info/fault detection.       Option
+// AXIS1/2_DRIVER_STATUS use the M3 (MISO) pin, which on MiniPCB2 is shared with AUX1/AUX2 (see src/pinmaps/Pins.MiniPCB.h).
+// Those same AUX1/AUX2 pins are also the ESP8266 GPIO0/RST flash-control lines used by SERIAL_B_ESP_FLASHING above, so both
+// features can't be active at once (Validate.h will #error) — DRIVER_STATUS is disabled here to keep the D1 Mini WiFi flashing.
+#define AXIS2_DRIVER_STATUS            OFF //    OFF, ON, HIGH, or LOW.  Polling for driver status info/fault detection.       Option
 
 #define AXIS2_DRIVER_DECAY            OFF //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
 #define AXIS2_DRIVER_DECAY_GOTO       OFF //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
@@ -406,18 +387,21 @@
 // FEATURES ------------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Aux
 // Note: Temporarily set DEBUG mode to VERBOSE and use "FEATURE1_TEMP DS1820" to list the DS18B20 device serial numbers.
 
-#define FEATURE1_PURPOSE       DEW_HEATER //    OFF, SWITCH, MOMENTARY_SWITCH, ANALOG_OUT, DEW_HEATER, INTERVALOMETER.        Option
+// NOTE: FEATURE1/2 were wired to raw ESP32 GPIO 2/4 on the FYSETC E4. On MiniPCB2 those same numbers are AXIS2_DIR_PIN and
+// AXIS1_SENSE_HOME_PIN (see src/pinmaps/Pins.MiniPCB.h), so both features are disabled here to avoid a pin conflict. Re-enable
+// with an available AUX pin (see the pinmap) if you wire up a dew heater.
+#define FEATURE1_PURPOSE              OFF //    OFF, SWITCH, MOMENTARY_SWITCH, ANALOG_OUT, DEW_HEATER, INTERVALOMETER.        Option
 #define FEATURE1_NAME        "Dew Heat 1" // "FE..", Name of feature being controlled.                                        Adjust
 #define FEATURE1_TEMP                 OFF //    OFF, THERMISTOR or n. Where n is the ds18b20 s/n. For DEW_HEATER temperature. Adjust
-#define FEATURE1_PIN                    2 //    OFF, AUX for auxiliary pin, n. Where n is the pin#. (E0)                      Adjust
+#define FEATURE1_PIN                  OFF //    OFF, AUX for auxiliary pin, n. Where n is the pin#. (E0)                      Adjust
 #define FEATURE1_VALUE_DEFAULT        OFF //    OFF, ON, n. Where n=0..255 for ANALOG_OUT purpose.                            Adjust
 #define FEATURE1_VALUE_MEMORY         OFF //    OFF, ON remembers SWITCH, ANALOG_OUT, DEW_HEATER state across power cycles.   Adjust
 #define FEATURE1_ON_STATE            HIGH //   HIGH, LOW to invert so "ON" is 0V and "OFF" is Vcc (3.3V usually.)             Adjust
 
-#define FEATURE2_PURPOSE       DEW_HEATER //    OFF, SWITCH, MOMENTARY_SWITCH, ANALOG_OUT, DEW_HEATER, INTERVALOMETER.        Option
+#define FEATURE2_PURPOSE              OFF //    OFF, SWITCH, MOMENTARY_SWITCH, ANALOG_OUT, DEW_HEATER, INTERVALOMETER.        Option
 #define FEATURE2_NAME        "Dew Heat 2" // "FE..", Name of feature being controlled.                                        Adjust
 #define FEATURE2_TEMP          THERMISTOR //    OFF, THERMISTOR or n. Where n is the ds18b20 s/n. For DEW_HEATER temperature. Adjust
-#define FEATURE2_PIN                    4 //    OFF, AUX for auxiliary pin, n. Where n is the pin#. (BED/TB)                  Adjust
+#define FEATURE2_PIN                  OFF //    OFF, AUX for auxiliary pin, n. Where n is the pin#. (BED/TB)                  Adjust
 #define FEATURE2_VALUE_DEFAULT        OFF //    OFF, ON, n. Where n=0..255 for ANALOG_OUT purpose.                            Adjust
 #define FEATURE2_VALUE_MEMORY         OFF //    OFF, ON remembers SWITCH, ANALOG_OUT, DEW_HEATER state across power cycles.   Adjust
 #define FEATURE2_ON_STATE            HIGH //   HIGH, LOW to invert so "ON" is 0V and "OFF" is Vcc (3.3V usually.)             Adjust

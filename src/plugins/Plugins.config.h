@@ -16,8 +16,14 @@
 //#define PLUGIN1                    sample //    OFF, Specify the class instance (same as plugin directory name) to enable.    Option
 //#include "sample/Sample.h"                //         Specify the header file to include the class.
 
+// The website plugin needs SERIAL_RADIO (WiFi/AP) which only exists on boards with a built-in ESP32 radio (e.g. FYSETC E4).
+// On MiniPCB2 (Teensy4.0) WiFi is handled by a separate D1 Mini companion, so the plugin is left disabled there.
+#if defined(ESP32)
 #define PLUGIN1                   website //    OFF, Specify the class instance (same as plugin directory name) to enable.    Option
 #include "website/Website.h"              //         Specify the header file to include the class.
+#else
+#define PLUGIN1                       OFF //    OFF, Specify the class instance (same as plugin directory name) to enable.    Option
+#endif
 #define PLUGIN1_COMMAND_PROCESSING    OFF //    OFF, Set to ON for plugins that allow command processing
 
 #define PLUGIN2                       OFF //    OFF, Specify the class instance (same as plugin directory name) to enable.    Option
