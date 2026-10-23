@@ -86,22 +86,22 @@
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
-// 1.8deg motor (200 full steps/rev) * 16 microsteps * 90:1 gear reduction / 360 = 800
-#define AXIS1_STEPS_PER_DEGREE        800 //  12800, n. Number of steps per degree:                                          <-Req'd
+// 1.8deg motor (200 full steps/rev) * 128 microsteps * 225:1 gear reduction (2.5:1 belt 16T:40T * 90:1 worm) / 360 = 16000
+#define AXIS1_STEPS_PER_DEGREE      16000 //  12800, n. Number of steps per degree:                                          <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
-#define AXIS1_REVERSE                 ON  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
+#define AXIS1_REVERSE                 OFF //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS1_LIMIT_MIN              -180 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_MAX               180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 
-// microstep setting matches the AXIS1_STEPS_PER_DEGREE calc above (16 microsteps); GOTO uses the same to keep it consistent
-#define AXIS1_DRIVER_MICROSTEPS         16 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+// backed off from 256 to 128 -- lower switching rate, testing whether it reduces motor heat
+#define AXIS1_DRIVER_MICROSTEPS        128 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
 #define AXIS1_DRIVER_MICROSTEPS_GOTO   OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
 // motor rated current 1.8A: IRUN/IGOTO set to rated, IHOLD OFF uses IRUN/2 (900mA) at standstill to limit heating
 #define AXIS1_DRIVER_IHOLD          OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS1_DRIVER_IRUN          1800 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS1_DRIVER_IGOTO         1800 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS1_DRIVER_IRUN          1500 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
+#define AXIS1_DRIVER_IGOTO         1500 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 // AXIS1/2_DRIVER_STATUS use the M3 (MISO) pin, which on MiniPCB2 is shared with AUX1/AUX2 (see src/pinmaps/Pins.MiniPCB.h).
@@ -127,22 +127,25 @@
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
-// 1.8deg motor (200 full steps/rev) * 16 microsteps * 90:1 gear reduction / 360 = 800
-#define AXIS2_STEPS_PER_DEGREE        800 //  12800, n. Number of steps per degree:                                          <-Req'd
+// 1.8deg motor (200 full steps/rev) * 128 microsteps * 932.4:1 gear reduction (5.18:1 planetary * 2:1 belt * 90:1 worm) / 360 = 66304
+#define AXIS2_STEPS_PER_DEGREE      66304 //  12800, n. Number of steps per degree:                                          <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
-#define AXIS2_REVERSE                 OFF //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
+#define AXIS2_REVERSE                 ON  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS2_LIMIT_MIN               -10 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
-#define AXIS2_LIMIT_MAX                85 //     90, n. Where n=0..90 (degrees.) Maximum allowed Declination or Altitude.     Infreq
+#define AXIS2_LIMIT_MAX                90 //     90, n. Where n=0..90 (degrees.) Maximum allowed Declination or Altitude.     Infreq
+#define LIMIT_HORIZON              -10.0F //  -10.0, n. Goto/motion lower altitude limit (deg). Saved in NV: set at runtime with :Sh-10#.
+#define LIMIT_OVERHEAD              85.0F //   80.0, n. Goto/motion upper altitude limit (deg). Saved in NV: set at runtime with :So85#.
 
-// microstep setting matches the AXIS2_STEPS_PER_DEGREE calc above (16 microsteps); GOTO uses the same to keep it consistent
-#define AXIS2_DRIVER_MICROSTEPS         16 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
-#define AXIS2_DRIVER_MICROSTEPS_GOTO   OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
+// axis2's gear reduction is large enough that 128 microsteps at GOTO slew speed would push the
+// step rate to ~200kHz; use 128 for smooth/quiet tracking but drop to 32 during GOTO/slews
+#define AXIS2_DRIVER_MICROSTEPS        128 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+#define AXIS2_DRIVER_MICROSTEPS_GOTO    32 //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
 // motor rated current 1.8A: IRUN/IGOTO set to rated, IHOLD OFF uses IRUN/2 (900mA) at standstill to limit heating
 #define AXIS2_DRIVER_IHOLD           OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS2_DRIVER_IRUN           1800 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS2_DRIVER_IGOTO          1800 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS2_DRIVER_IRUN           1500 //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
+#define AXIS2_DRIVER_IGOTO          1500 //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 // AXIS1/2_DRIVER_STATUS use the M3 (MISO) pin, which on MiniPCB2 is shared with AUX1/AUX2 (see src/pinmaps/Pins.MiniPCB.h).
@@ -160,7 +163,7 @@
 #define AXIS2_SENSE_LIMIT_MAX         OFF // ...NSE, HIGH or LOW state on limit sense switch stops movement.                  Option
 
 //hidden config
-//#define AXIS2_HOME_DEFAULT            90
+#define AXIS2_HOME_DEFAULT          84.9 // home Alt (deg). Must stay below LIMIT_OVERHEAD: 85.0 double > 85 float, aborts gotos.
 
 // MOUNT -------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Mount#MOUNT
 #define MOUNT_TYPE             ALTAZM_UNL //    GEM, GEM         German Equatorial Mount, etc. that need meridian flips.     <-Req'd
@@ -240,7 +243,10 @@
 #define SLEW_RATE_BASE_DESIRED        3.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
                                           //         1/2 to 2x this rate, and as performace considerations require.
 #define SLEW_RATE_MEMORY               ON //    OFF, ON Remembers rates set across power cycles.                              Option
-#define SLEW_ACCELERATION_DIST        1.0 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
+// axis2 (932:1) needs ~4x the motor rpm of axis1 (225:1) for the same deg/s; slow it relative to axis1
+// so the 150% preset gives axis1 4.5 deg/s and axis2 3.0 deg/s
+#define AXIS2_SLEW_RATE_PERCENT      66.7 //  100.0, n. Axis2 max slew rate as a percentage of axis1.                      Option
+#define SLEW_ACCELERATION_DIST        0.5 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
 #define SLEW_RAPID_STOP_DIST          0.1 //    2.0, n, (degrees.) Approx. distance required to stop when a slew              Adjust
                                           //         is aborted or a limit is exceeded.
 #define GOTO_FEATURE                   ON //     ON, Use OFF to disable mount Goto features.                                  Infreq

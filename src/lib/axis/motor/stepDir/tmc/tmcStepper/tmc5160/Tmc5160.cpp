@@ -36,6 +36,16 @@ bool StepDirTmc5160::init() {
   modeMicrostepTracking();
   driver->en_pwm_mode(false);
 
+  // raise the StealthChop PWM chopper frequency from the library default (~11.7kHz, audible)
+  // to ~23.4kHz (at/above typical hearing range) to reduce motor whine
+  driver->pwm_freq(2);
+
+  // SpreadCycle chopper hysteresis tuning (commonly recommended starting point for quieter
+  // operation; library default HSTRT/HEND is untuned for this motor) - TOFF stays at the
+  // library's begin()-time value of 8, only HSTRT/HEND are adjusted here
+  driver->hstrt(4);
+  driver->hend(1);
+
   current(iRun, iHoldRatio);
 
   // enable StallGuard / CoolStep speed threshold gating
