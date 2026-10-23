@@ -3,40 +3,25 @@
 This project keeps the original Arduino sketch layout and uses `platformio.ini`
 to tell PlatformIO which files to build.
 
-## Environments
+## Environment
 
 Default environment:
-
-```text
-onstepx_teensy40_minipcb2
-```
-
-- Teensy 4.0
-- `MiniPCB2` pinmap from `Config.h`
-- `TMCStepper` library (AXIS1/AXIS2 = TMC5160, SPI via dedicated M0..M3 pins)
-- WiFi via a WEMOS D1 Mini (ESP8266) companion on `SERIAL_B` (`SERIAL_B_ESP_FLASHING`),
-  not a built-in radio
-- serial monitor at `115200`
-
-Also present, kept for reference / the original FYSETC E4 target:
 
 ```text
 onstepx_esp32_mf_oozoo_e4
 ```
 
+Current target:
+
 - ESP32 Dev Module compatible board
 - `MF_OOZOO_E4` pinmap from `Config.h`
 - `huge_app.csv` partition layout
 - `TMCStepper` library
-- serial monitor at `460800`
+- serial monitor and firmware USB command port at `230400` (10.28z onward)
 - PlatformIO `platformio/espressif32@6.7.0` with Arduino-ESP32 `2.0.16`
 
-Switch environments with PlatformIO's environment picker (bottom status bar in
-VS Code) or `pio run -e <env name>`.
-
 `platformio_deps.cpp` exists only to help PlatformIO's Library Dependency Finder
-see the ESP32 built-in libraries used through OnStepX headers; it's a no-op
-outside of an ESP32 build.
+see the ESP32 built-in libraries used through OnStepX headers.
 
 ## VS Code
 
@@ -57,8 +42,8 @@ The workspace also has VS Code tasks that call `tools/pio.ps1`, so
 
 ## Upload Port
 
-PlatformIO usually auto-detects the Teensy/ESP32 serial port. If it does not,
-add this to the environment in `platformio.ini`:
+PlatformIO usually auto-detects the ESP32 serial port. If it does not, add this
+to the environment in `platformio.ini`:
 
 ```ini
 upload_port = COM5
@@ -66,12 +51,35 @@ monitor_port = COM5
 ```
 
 Replace `COM5` with the port shown by PlatformIO or Windows Device Manager.
-Teensy uploads go through the Teensy Loader (installed with the PlatformIO
-Teensy platform); no bootloader button press is normally required over USB.
 
 ## Debug
 
-Software serial monitoring works over USB. True breakpoints on the ESP32
-target require a JTAG debugger such as ESP-Prog; after wiring it, uncomment
-the `debug_tool` lines under `[env:onstepx_esp32_mf_oozoo_e4]` in
-`platformio.ini`.
+Software serial monitoring works over USB. True breakpoints require an ESP32
+JTAG debugger such as ESP-Prog. After wiring the debugger, uncomment the
+`debug_tool` lines in `platformio.ini`.
+
+## Host regression checks
+
+With Python 3 and a host C++17 compiler installed:
+
+```sh
+bash tools/test_commands.sh
+python3 tests/host/tracking_pulse_test.py
+python3 tests/host/stepdir_transition_test.py
+```
+
+The pulse test extracts the current firmware's tracking, guide and coordinate
+functions, substitutes a deterministic clock and hardware stubs, and checks
+240 timing cases across Alt/Az, Alt/Alt and equatorial mounts. It also checks
+overlapping axes, guide changes during a periodic calculation, reversal and
+abort. All three tests enable AddressSanitizer and UndefinedBehaviorSanitizer.
+
+The step/dir transition test compiles the current frequency and mode-switch
+functions and checks requested rates across microstep ratios, acceleration,
+deceleration, repeated rates, stop/restart and backlash. It covers PULSE,
+SQUARE and DEDGE waveforms, including the regression where a new tracking
+rate numerically equals the previous coarse-microstep pulse rate. ISR boundary
+arrival and hardware are stubbed; it does not measure vibration or step loss.
+
+In a ptrace-based sandbox, use `ASAN_OPTIONS=detect_leaks=0` if LeakSanitizer
+cannot enumerate threads. This does not replace a device output timing test.

@@ -53,11 +53,15 @@ void Goto::init() {
     settings.usPerStepCurrent = usPerStepBase;
   #endif
 
+  // Recover settings written by older firmware before using them in rate calculations.
+  const bool invalidStoredRate = !isfinite(settings.usPerStepCurrent) || settings.usPerStepCurrent <= 0.0F;
+  if (invalidStoredRate) settings.usPerStepCurrent = usPerStepBase;
   settings.usPerStepCurrent = constrain(settings.usPerStepCurrent, usPerStepBase/2.0F, usPerStepBase*2.0F);
   if (usPerStepBase < usPerStepLowerLimit()) usPerStepBase = usPerStepLowerLimit()*2.0F;
   if (settings.usPerStepCurrent > 1000000.0F) settings.usPerStepCurrent = usPerStepBase;
   if (settings.usPerStepCurrent < usPerStepBase/2.0F) settings.usPerStepCurrent = usPerStepBase/2.0F;
   if (settings.usPerStepCurrent > usPerStepBase*2.0F) settings.usPerStepCurrent = usPerStepBase*2.0F;
+  if (invalidStoredRate) nv().kv().put(nvKey, settings);
 
   axis1.setFrequencyMax(((1000000.0F/usPerStepBase)/axis1.getStepsPerMeasure())*2.0F);
   axis2.setFrequencyMax(((1000000.0F/usPerStepBase)/axis2.getStepsPerMeasure())*2.0F);
@@ -80,6 +84,7 @@ CommandError Goto::request() {
 CommandError Goto::request(Coordinate coords, PierSideSelect pierSideSelect, bool native) {
   if (!startupAuthority.trusted()) {
     DLF("WRN: Mount, goto rejected because startup authority is not trusted");
+    startupAuthority.logStatus();
     return CE_SLEW_ERR_UNSPECIFIED;
   }
 
@@ -206,6 +211,7 @@ CommandError Goto::requestSync() {
 CommandError Goto::requestSync(Coordinate coords, PierSideSelect pierSideSelect, bool native) {
   if (!startupAuthority.trusted()) {
     DLF("WRN: Mount, sync rejected because startup authority is not trusted");
+    startupAuthority.logStatus();
     return CE_SLEW_ERR_UNSPECIFIED;
   }
   

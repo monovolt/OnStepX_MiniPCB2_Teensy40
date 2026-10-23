@@ -21,9 +21,9 @@ void Home::init() {
   if (!nv().kv().getOrInit(nvKey, settings)) { DLF("WRN: Nv, init failed for HOME_SETTINGS"); }
 
   settings.automaticAtBoot = constrain(settings.automaticAtBoot, false, true);
-  settings.axis1.senseOffset = constrain(settings.axis1.senseOffset, degToArcsecF(-180), degToArcsecF(180)); 
+  settings.axis1.senseOffset = constrain(settings.axis1.senseOffset, degToArcsecL(-180L), degToArcsecL(180L));
   settings.axis1.senseReverse = constrain(settings.axis1.senseReverse, false, true);
-  settings.axis2.senseOffset = constrain(settings.axis2.senseOffset, degToArcsecF(-180), degToArcsecF(180));
+  settings.axis2.senseOffset = constrain(settings.axis2.senseOffset, degToArcsecL(-180L), degToArcsecL(180L));
   settings.axis2.senseReverse = constrain(settings.axis2.senseReverse, false, true);
 
   #ifndef AXIS1_HOME_DEFAULT
@@ -56,6 +56,7 @@ CommandError Home::request() {
     failed = false;
     if (!startupAuthority.trusted() && !hasSense) {
       DLF("WRN: Mount, home rejected because startup authority is not trusted and no home switches are present");
+      startupAuthority.logStatus();
       return CE_SLEW_ERR_UNSPECIFIED;
     }
     if (!site.dateIsReady || !site.timeIsReady) return CE_SLEW_ERR_IN_STANDBY;
@@ -143,6 +144,7 @@ CommandError Home::requestWithReset() {
 
   if (!startupAuthority.trusted() && !hasSense) {
     DLF("WRN: Mount, reset/home rejected because startup authority is not trusted and no home switches are present");
+    startupAuthority.logStatus();
     return CE_SLEW_ERR_UNSPECIFIED;
   }
   if (hasSense) {
